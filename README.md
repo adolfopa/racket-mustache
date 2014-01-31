@@ -15,7 +15,7 @@ a file named `simple.ms` (the `.ms` extension is not required; you can use whate
 you want).
 
 ```mustache
-#language mustache
+#lang mustache
 Hey! this is my {{adjective}} Mustache template.
 ```
 
@@ -29,7 +29,7 @@ file in the same directory where `simple.ms` is:
 ```racket
 #lang racket
 
-(require "simple.ms") ;; imports the `render` function
+(require "simple.ms") ; imports the `render` function
 
 (module+ main
   (render (hash "adjective" "first") (current-output-port)))
