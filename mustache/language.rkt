@@ -97,13 +97,13 @@
 
 ;; env-ref: Any -> Any
 ;; Return the value bound to `name' in the current environment. If no value
-;; is bound, return the empty string.
-(define (env-ref name)
+;; is bound, return the value of `default' (by default, the empty string).
+(define (env-ref name [default ""])
   (define value
     (for/first ([x (current-env)]
                 #:when (hash-has-key? x name))
       (hash-ref x name)))
-  (or value ""))
+  (or value default))
 
 (module+ test
   (check-equal? (env-ref 'x) "")
@@ -130,7 +130,7 @@
 ;;
 ;; Mustache stx: {{#foo}}...{{/foo}}
 (define-syntax-rule (sequence name stmt ...)
-  (let ([val (env-ref name)])
+  (let ([val (env-ref name #f)])
     (when val
      (cond [(list? val)
             (for ([elt val])
@@ -143,8 +143,8 @@
 (module+ test
   (check-equal? (with-env (hash) (sequence 'a 'b)) (void))
   (check-equal? (with-env (hash 'a '()) (sequence 'a 'b)) (void))
-  (check-equal? (with-env (hash 'a "") (sequence 'a 'b)) (void))
-  (check-equal? (with-env (hash 'a #"") (sequence 'a 'b)) (void))
+  (check-equal? (with-env (hash 'a "") (sequence 'a 'b)) 'b)
+  (check-equal? (with-env (hash 'a #"") (sequence 'a 'b)) 'b)
   
   (check-equal? (let ([out (open-output-string)])
                   (parameterize ([current-output-port out])
@@ -156,28 +156,26 @@
 
 ;; mustache-false?: Any -> Boolean
 ;; Test if `datum' is a falsy value.  A value is considered falsy
-;; if it is #f, "", #"" or '().
+;; if it is #f or '().
 (define (mustache-false? datum)
   (or (not datum)
-      (null? datum)
-      (and (string? datum) (zero? (string-length datum)))
-      (and (bytes? datum) (zero? (bytes-length datum)))))
+      (null? datum)))
 
 (module+ test
   (check-true (mustache-false? #f))
   (check-true (mustache-false? '()))
-  (check-true (mustache-false? ""))
-  (check-true (mustache-false? #"")))
+  (check-false (mustache-false? ""))
+  (check-false (mustache-false? #"")))
 
 ;; Evaluate the given statements when `name' is not bound or is a "falsy" value.
 ;; Mustache stx: {{^foo}}...{{/foo}}
 (define-syntax-rule (inversion name stmt ...)
-  (let ([val (env-ref name)])
+  (let ([val (env-ref name #f)])
     (when (mustache-false? val)
       stmt ...)))
 
 (module+ test
   (check-equal? (with-env (hash) (inversion 'a 'b)) 'b)
-  (check-equal? (with-env (hash 'a "") (inversion 'a 'b)) 'b)
-  (check-equal? (with-env (hash 'a #"") (inversion 'a 'b)) 'b)
+  (check-equal? (with-env (hash 'a "") (inversion 'a 'b)) (void))
+  (check-equal? (with-env (hash 'a #"") (inversion 'a 'b)) (void))
   (check-equal? (with-env (hash 'a '()) (inversion 'a 'b)) 'b))
