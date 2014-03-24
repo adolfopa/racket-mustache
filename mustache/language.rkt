@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 ;; Copyright (c) 2014 Adolfo Perez Alvarez <adolfo.pa@gmail.com>
 ;;
@@ -15,6 +15,9 @@
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with this library; if not, write to the Free Software Foundation, Inc.,
 ;; 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+
+(require racket/function
+         racket/list)
 
 (provide display-escaped
          display-raw
