@@ -178,8 +178,14 @@
 (define (mustache-read src in)
   (syntax->datum (mustache-read-syntax src in)))
 
+(define (skip-until-first-nl in)
+  (define c (read-char in))
+  (unless (or (eof-object? c) (char=? c #\newline))
+    (skip-until-first-nl in)))
+
 ;; TODO: This needs a serious cleanup.
-(define (mustache-read-syntax src in)
+(define (mustache-read-syntax src in [skip-until-nl #t])
+  (when skip-until-nl (skip-until-first-nl in))
   (if (eof-object? (peek-char in))
       eof
       (with-syntax ([body 
