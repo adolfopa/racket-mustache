@@ -26,13 +26,19 @@
 
 (struct tag (name pos) #:transparent)
 
+;; Variable references: {{foo}}
 (struct ref tag () #:transparent)
-(struct seq tag (body) #:transparent)
-(struct end tag () #:transparent)
-(struct esc tag () #:transparent)
-(struct neg tag (body) #:transparent)
-
-(struct del (start end end-pos) #:transparent)
+;; Sections: {{#foo}}
+(struct section tag (body) #:transparent)
+;; Close tags: {{/foo}}
+(struct close-tag tag () #:transparent)
+;; Escape tags: {{{foo}}} or {{&foo}}
+(struct escape tag () #:transparent)
+;; Inverted sections: {{^foo}}
+(struct inversion tag (body) #:transparent)
+;; Delimiter change: {{=<% %>=}}
+(struct delimiter (start end end-pos) #:transparent)
+;; Literal text
 (struct txt (content end-pos) #:transparent)
 
 (define regexp-append (compose regexp string-append))
@@ -92,26 +98,26 @@
       [(list s c id)
        ((case c
           [(#"" ) ref]
-          [(#"#") (λ (name pos) (seq name pos #f))]
-          [(#"/") end]
-          [(#"&") esc]
-          [(#"^") (λ (name pos) (neg name pos #f))])
+          [(#"#") (λ (name pos) (section name pos #f))]
+          [(#"/") close-tag]
+          [(#"&") escape]
+          [(#"^") (λ (name pos) (inversion name pos #f))])
         (bytes->string/utf-8 id) (extend-pos pos (bytes-length s)))]
       [#f
        (cond [(read-comment-tag in)
               #f]
              [(read-delims-tag in)
               => (match-lambda [(list s start end)
-                                (del start end (extend-pos pos (bytes-length s)))])]
+                                (delimiter start end (extend-pos pos (bytes-length s)))])]
              [(read-escape-tag in)
               => (match-lambda [(list s id)
-                                (esc (bytes->string/utf-8 id) (extend-pos pos (bytes-length s)))])]
+                                (escape (bytes->string/utf-8 id) (extend-pos pos (bytes-length s)))])]
              [else
               (define contents (bytes (char->integer (read-char in))))
               (txt contents
                    (extend-pos pos (bytes-length contents)))])]))
   (match tag
-    [(del start end end-pos)
+    [(delimiter start end end-pos)
      (define s (bytes->string/utf-8 start))
      (define e (bytes->string/utf-8 end))
      (parameterize ([current-tag-regexp (make-tag-regexp s e)]
@@ -151,12 +157,12 @@
                  (current-continuation-marks)
                  name 'eof))
          (values (reverse acc) #f))]
-    [(list (or (seq name pos _) (neg name pos _)) more ...)
+    [(list (or (section name pos _) (inversion name pos _)) more ...)
      (define-values (body succ)
        (normalize more '() name))
-     (define kons (if (seq? (first lst)) seq neg))
+     (define kons (if (section? (first lst)) section inversion))
      (normalize (or succ '()) (cons (kons name pos body) acc) #f)]
-    [(list (end n pos) more ...)
+    [(list (close-tag n pos) more ...)
      (if (equal? n name) 
          (values (reverse acc) more)
          (raise (exn:fail:mustache:close-tag
@@ -198,16 +204,16 @@
                                              (match (first tokens)
                                                [(ref name pos)
                                                 (decorate `(display-escaped ,name) pos)]
-                                               [(seq name pos body)
+                                               [(section name pos body)
                                                 ;; TODO: Fix this. There must be a better way
                                                 ;; of attaching source information to the syntax
                                                 ;; object.
                                                 (with-syntax ([body (loop body)]
                                                               [(op x) (decorate `(sequence ,name) pos)])
                                                   #'(op x . body))]
-                                               [(esc name pos)
+                                               [(escape name pos)
                                                 (decorate `(display-raw ,name) pos)]
-                                               [(neg name pos body)
+                                               [(inversion name pos body)
                                                 (with-syntax ([body (loop body)]
                                                               [(op x) (decorate `(inversion ,name) pos)])
                                                   #'(op x . body))] ; decorate this
