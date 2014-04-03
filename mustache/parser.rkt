@@ -59,7 +59,7 @@
   (make-parameter (make-comment-regexp default-tag-open default-tag-close)))
 
 (define (make-delims-regexp s e)
-  (regexp-append "^" (regexp-quote s) " *= *([^ ]+) *([^ ]+?) *" (regexp-quote e)))
+  (regexp-append "^" (regexp-quote s) " *= *([^ ]+) *([^ ]+?) *= *" (regexp-quote e)))
 
 (define current-delims-regexp
   (make-parameter (make-delims-regexp default-tag-open default-tag-close)))
@@ -223,8 +223,6 @@
         #'(begin . body))))
 
 (module+ test
-  ;; TODO: Add tests for `mustache-read-syntax'
-  
   (require rackunit)
   
   (define/match (tag-contents x)
@@ -275,16 +273,16 @@
                 (list "foo"))
   
   ;; User defined delimiters are supported.
-  (check-equal? (^^ (mustache-parse (open-input-string "{{=$$ $$}}$$foo$$")))
+  (check-equal? (^^ (mustache-parse (open-input-string "{{=$$ $$=}}$$foo$$")))
                 (list "foo"))
   ;; Any character is allowed as a delimiter.
-  (check-equal? (^^ (mustache-parse (open-input-string "{{=\\ \\}}\\foo\\abc\\=1 2\\1a2")))
+  (check-equal? (^^ (mustache-parse (open-input-string "{{=\\ \\=}}\\foo\\abc\\=1 2=\\1a2")))
                 (list "foo" #"abc" "a"))
   ;; Basic uses work as expected.
-  (check-equal? (^^ (mustache-parse (open-input-string "123{{ =  $$  $$ }}456$$foo$$")))
+  (check-equal? (^^ (mustache-parse (open-input-string "123{{ =  $$  $$  = }}456$$foo$$")))
                 (list #"123456" "foo"))
   ;; Even when start and end delimiters are equal, no separation between expressions needed.
-  (check-equal? (^^ (mustache-parse (open-input-string "{{=$$ $$}}$$a$$$$={{ }}$${{b}}")))
+  (check-equal? (^^ (mustache-parse (open-input-string "{{=$$ $$=}}$$a$$$$={{ }}=$${{b}}")))
                 (list "a" "b"))
   
   ;; An unbalanced close expression fails
