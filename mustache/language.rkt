@@ -16,7 +16,8 @@
 ;; along with this library; if not, write to the Free Software Foundation, Inc.,
 ;; 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
 
-(require racket/function
+(require racket/dict
+         racket/function
          racket/list)
 
 (provide display-escaped
@@ -104,8 +105,8 @@
 (define (env-ref name [default ""])
   (define value
     (for/first ([x (current-env)]
-                #:when (hash-has-key? x name))
-      (hash-ref x name)))
+                #:when (dict-has-key? x name))
+      (dict-ref x name)))
   (or value default))
 
 (module+ test
@@ -115,7 +116,7 @@
 ;; Extend the current environment with the given object.
 ;; If the object is not a hash, no environment extension will be done.
 (define-syntax-rule (with-env obj stmt ...)
-  (if (hash? obj)
+  (if (dict? obj)
       (parameterize ([current-env (cons obj (current-env))])
         stmt ...)
       (begin stmt ...)))
@@ -127,8 +128,8 @@
 ;; Evaluate the body if `name' is bound in the current environment.
 ;; If the value bound to `name' is a list, the body will be evaluated
 ;; once per element, using the element to extend the environment; if
-;; the bound value is a hash, the body will be evaluated once with
-;; the environment extended by the hash; if it is any other non-false
+;; the bound value is a dict, the body will be evaluated once with
+;; the environment extended by the dict; if it is any other non-false
 ;; value, the body will be evaluated once with no environment extension.
 ;;
 ;; Mustache stx: {{#foo}}...{{/foo}}
