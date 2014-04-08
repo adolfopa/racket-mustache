@@ -136,7 +136,7 @@
 (define-syntax-rule (sequence name stmt ...)
   (let ([val (env-ref name #f)])
     (when val
-     (cond [(list? val)
+     (cond [(mustache-seq? val)
             (for ([elt val])
               (with-env elt stmt ...))]
            [(mustache-false? val)
@@ -170,6 +170,20 @@
   (check-true (mustache-false? '()))
   (check-false (mustache-false? ""))
   (check-false (mustache-false? #"")))
+
+;; mustache-seq?: Any -> Boolean
+;; Test if `datum' is a mustache sequence (list or vector).
+(define (mustache-seq? datum)
+  (and (sequence? datum)
+       (not (string? datum))
+       (not (bytes? datum))))
+
+(module+ test
+  (check-true (mustache-seq? '()))
+  (check-true (mustache-seq? '(1 2 3)))
+  (check-true (mustache-seq? #()))
+  (check-false (mustache-seq? ""))
+  (check-false (mustache-seq? #"")))
 
 ;; Evaluate the given statements when `name' is not bound or is a "falsy" value.
 ;; Mustache stx: {{^foo}}...{{/foo}}
