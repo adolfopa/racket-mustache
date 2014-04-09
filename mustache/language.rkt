@@ -95,29 +95,45 @@
 (define (display-txt text)
   (display text))
 
-;; current-env: (ParameterOf (ListOf (HashTable Any Any)))
+(define-values (dict:has-key? dict:ref)
+  (values dict-has-key? dict-ref))
+
+(struct environment (frames)
+  #:methods gen:dict
+  [(define (dict-ref dict key [failure
+                               (λ () (error "no value found for key" key))])
+     (define value
+       (for/first ([frame (environment-frames dict)]
+                   #:when (dict:has-key? frame key))
+         (box (dict:ref frame key))))
+     (if (box? value)
+         (unbox value)
+         (failure)))])
+
+(define empty-environment (environment '()))
+
+(define (environment-extend env frame)
+  (environment (cons frame (environment-frames env))))
+
+;; current-env: (ParameterOf (Dict Any Any))
 ;; The current environment.
-(define current-env (make-parameter '()))
+(define current-env (make-parameter empty-environment))
 
 ;; env-ref: Any -> Any
 ;; Return the value bound to `name' in the current environment. If no value
 ;; is bound, return the value of `default' (by default, the empty string).
 (define (env-ref name [default ""])
-  (define value
-    (for/first ([x (current-env)]
-                #:when (dict-has-key? x name))
-      (dict-ref x name)))
-  (or value default))
+  (dict-ref (current-env) name (λ () default)))
 
 (module+ test
   (check-equal? (env-ref 'x) "")
   (check-equal? (with-env (hash 'x 'y) (env-ref 'x)) 'y))
 
 ;; Extend the current environment with the given object.
-;; If the object is not a hash, no environment extension will be done.
+;; If the object is not a dict, no environment extension will be done.
 (define-syntax-rule (with-env obj stmt ...)
   (if (dict? obj)
-      (parameterize ([current-env (cons obj (current-env))])
+      (parameterize ([current-env (environment-extend (current-env) obj)])
         stmt ...)
       (begin stmt ...)))
 
@@ -197,3 +213,5 @@
   (check-equal? (with-env (hash 'a "") (inversion 'a 'b)) (void))
   (check-equal? (with-env (hash 'a #"") (inversion 'a 'b)) (void))
   (check-equal? (with-env (hash 'a '()) (inversion 'a 'b)) 'b))
+     
+   
