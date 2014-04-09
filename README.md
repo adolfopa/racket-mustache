@@ -37,15 +37,14 @@ file in the same directory where `simple.ms` is:
 
 The render function has the following signature:
 ```racket
-(: render ((HashTable String Any) Port -> Void))
+(: render ((Dict String Any) Port -> Void))
 ```
-where the first argument is a hash table mapping names (strings) to values (any racket value);
+where the first argument is a dict mapping names (strings) to values (any racket value);
 the second argument is the port where the template will write its output.
 
 If you execute the `simple-test.rkt` script you should see something like:
 ```sh
 $ racket simple-test.rkt
-
 Hey! this is my first Mustache template.
 ```
 
