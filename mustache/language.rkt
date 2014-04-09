@@ -25,6 +25,7 @@
          display-txt
          sequence
          inversion
+         partial
          #%datum
          #%app
          (rename-out [module-begin #%module-begin]))
@@ -98,7 +99,7 @@
 (define-values (dict:has-key? dict:ref)
   (values dict-has-key? dict-ref))
 
-(struct environment (frames)
+(struct environment (frames) #:transparent
   #:methods gen:dict
   [(define (dict-ref dict key [failure
                                (λ () (error "no value found for key" key))])
@@ -214,4 +215,21 @@
   (check-equal? (with-env (hash 'a #"") (inversion 'a 'b)) (void))
   (check-equal? (with-env (hash 'a '()) (inversion 'a 'b)) 'b))
      
+(define (partial name)
+  (define render
+    (let ([ns (make-base-empty-namespace)])
+      (namespace-attach-module (current-namespace) 'racket/dict ns) ; gen:dict
+      (parameterize ([current-namespace ns])
+        (dynamic-require name 'render (thunk (error "couldn't load partial" name))))))
+  (render (current-env) (current-output-port)))
+
+(module+ test
+  (define (check-partial module-name expected [initial-dict (hash)])
+    (parameterize ([current-output-port (open-output-string)])
+      (with-env initial-dict
+        (partial module-name)
+        (check-equal? (get-output-string (current-output-port))
+                      expected))))
+  (check-partial "tests/only-text.ms" "I contain only text.\n")
+  (check-partial "tests/simple-ref.ms" "The variable value is bar.\n" (hash "foo" "bar")))
    

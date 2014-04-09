@@ -6,7 +6,8 @@
          (prefix-in section: "section.ms")
          (prefix-in section-ref: "section-ref.ms")
          (prefix-in inversion: "inversion.ms")
-         (prefix-in delimiter: "delimiter.ms"))
+         (prefix-in delimiter: "delimiter.ms")
+         (prefix-in partial: "partials.ms"))
 
 (module+ test
   (require rackunit))
@@ -38,4 +39,6 @@
   (check-tpl inversion:render (hash "foo" #f) "Maybe ...\n")
   (check-tpl inversion:render (hash) "Maybe ...\n")
   
-  (check-tpl delimiter:render (hash "foo" "bar") "The value is bar.\n"))
+  (check-tpl delimiter:render (hash "foo" "bar") "The value is bar.\n")
+  
+  (check-tpl partial:render (hash) "The content of the partial is I contain only text.\n"))

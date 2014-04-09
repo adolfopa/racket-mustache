@@ -36,6 +36,8 @@
 (struct escape tag () #:transparent)
 ;; Inverted sections: {{^foo}}
 (struct inversion tag (body) #:transparent)
+;; Partials: {{>foo}}
+(struct partial tag () #:transparent)
 ;; Delimiter change: {{=<% %>=}}
 (struct delimiter (start end end-pos) #:transparent)
 ;; Literal text
@@ -47,7 +49,7 @@
 (define default-tag-close "}}")
 
 (define (make-tag-regexp s e)
-  (regexp-append "^" (regexp-quote s) " *([#/&^]?) *([a-zA-Z0-9?]+) *" (regexp-quote e) "\n?"))
+  (regexp-append "^" (regexp-quote s) " *([#/&^>]?) *([a-zA-Z0-9.?_-]+) *" (regexp-quote e) "\n?"))
 
 (define current-tag-regexp
   (make-parameter (make-tag-regexp default-tag-open default-tag-close)))
@@ -101,7 +103,8 @@
           [(#"#") (λ (name pos) (section name pos #f))]
           [(#"/") close-tag]
           [(#"&") escape]
-          [(#"^") (λ (name pos) (inversion name pos #f))])
+          [(#"^") (λ (name pos) (inversion name pos #f))]
+          [(#">") partial])
         (bytes->string/utf-8 id) (extend-pos pos (bytes-length s)))]
       [#f
        (cond [(read-comment-tag in)
@@ -217,6 +220,8 @@
                                                 (with-syntax ([body (loop body)]
                                                               [(op x) (decorate `(inversion ,name) pos)])
                                                   #'(op x . body))] ; decorate this
+                                               [(partial name pos)
+                                                (decorate `(partial ,name) pos)]
                                                [(txt content pos)
                                                 (decorate `(display-txt ,content) pos)])])
                                 #'(expr . more))]))])
@@ -286,4 +291,7 @@
                 (list "a" "b"))
   
   ;; An unbalanced close expression fails
-  (check-exn exn:fail:mustache:close-tag? (thunk (mustache-parse (open-input-string "{{/foo}}")))))
+  (check-exn exn:fail:mustache:close-tag? (thunk (mustache-parse (open-input-string "{{/foo}}"))))
+  
+  ;; Recognizes partials
+  (check-equal? (^^ (mustache-parse (open-input-string "{{>foo.ms}}"))) (list "foo.ms")))
