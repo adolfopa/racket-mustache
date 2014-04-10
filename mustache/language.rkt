@@ -192,6 +192,7 @@
 ;; Test if `datum' is a mustache sequence (list or vector).
 (define (mustache-seq? datum)
   (and (sequence? datum)
+       (not (hash? datum))
        (not (string? datum))
        (not (bytes? datum))))
 
@@ -200,7 +201,8 @@
   (check-true (mustache-seq? '(1 2 3)))
   (check-true (mustache-seq? #()))
   (check-false (mustache-seq? ""))
-  (check-false (mustache-seq? #"")))
+  (check-false (mustache-seq? #""))
+  (check-false (mustache-seq? (hash 'foo (hash 'bar "abc")))))
 
 ;; Evaluate the given statements when `name' is not bound or is a "falsy" value.
 ;; Mustache stx: {{^foo}}...{{/foo}}

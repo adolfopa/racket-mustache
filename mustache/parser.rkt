@@ -160,11 +160,11 @@
                  (current-continuation-marks)
                  name 'eof))
          (values (reverse acc) #f))]
-    [(list (or (section name pos _) (inversion name pos _)) more ...)
+    [(list (or (section n pos _) (inversion n pos _)) more ...)
      (define-values (body succ)
-       (normalize more '() name))
+       (normalize more '() n))
      (define kons (if (section? (first lst)) section inversion))
-     (normalize (or succ '()) (cons (kons name pos body) acc) #f)]
+     (normalize (or succ '()) (cons (kons n pos body) acc) name)]
     [(list (close-tag n pos) more ...)
      (if (equal? n name) 
          (values (reverse acc) more)
@@ -262,6 +262,9 @@
                 (list "foo" "bar"))
   ;; Recognizes sequence closing expressions.
   (check-equal? (^^ (mustache-parse (open-input-string "{{#foo}}{{/foo}}")))
+                (list "foo"))
+  ;; Recognizes nested sequence closing expressions.
+  (check-equal? (^^ (mustache-parse (open-input-string "{{#foo}}{{#bar}}{{bat}{{/bar}}{{/foo}}")))
                 (list "foo"))
   ;; Recognizes escaping expressions.
   (check-equal? (^^ (mustache-parse (open-input-string "{{&foo}}")))
