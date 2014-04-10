@@ -5,6 +5,7 @@
          (prefix-in escaping: "escaping.ms")
          (prefix-in section: "section.ms")
          (prefix-in section-ref: "section-ref.ms")
+         (prefix-in nested-sections: "nested-sections.ms")
          (prefix-in inversion: "inversion.ms")
          (prefix-in delimiter: "delimiter.ms")
          (prefix-in partial: "partials.ms"))
@@ -34,11 +35,14 @@
   (check-tpl section:render (hash) "Here are some .\n")
   
   (check-tpl section-ref:render (hash "foo" (list (hash "bar" 42))) "The answer is 42.\n")
+
+  (check-tpl nested-sections:render (hash "foo" (hash "bar" (hash "bat" "nested")))
+                                    "These sections are nested.\n")
   
   (check-tpl inversion:render (hash "foo" "xyz") "\n")
   (check-tpl inversion:render (hash "foo" #f) "Maybe ...\n")
   (check-tpl inversion:render (hash) "Maybe ...\n")
   
   (check-tpl delimiter:render (hash "foo" "bar") "The value is bar.\n")
-  
+
   (check-tpl partial:render (hash) "The content of the partial is I contain only text.\n"))
