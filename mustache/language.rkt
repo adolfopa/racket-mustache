@@ -109,7 +109,10 @@
          (box (dict:ref frame key))))
      (if (box? value)
          (unbox value)
-         (failure)))])
+         (failure)))
+   (define (dict-has-key? dict key)
+     (for/or ([frame (environment-frames dict)])
+       (dict:has-key? frame key)))])
 
 (define empty-environment (environment '()))
 
@@ -140,7 +143,8 @@
 
 (module+ test
   (check-equal? (with-env 'a (env-ref 'a)) "")
-  (check-equal? (with-env (hash 'a 'b) (env-ref 'a)) 'b))
+  (check-equal? (with-env (hash 'a 'b) (env-ref 'a)) 'b)
+  (check-equal? (with-env (hash) (with-env (current-env) (env-ref 'a))) ""))
 
 ;; Evaluate the body if `name' is bound in the current environment.
 ;; If the value bound to `name' is a list, the body will be evaluated
@@ -233,5 +237,5 @@
         (check-equal? (get-output-string (current-output-port))
                       expected))))
   (check-partial "tests/only-text.ms" "I contain only text.\n")
-  (check-partial "tests/simple-ref.ms" "The variable value is bar.\n" (hash "foo" "bar")))
-   
+  (check-partial "tests/simple-ref.ms" "The variable value is bar.\n" (hash "foo" "bar"))
+  (check-partial "tests/simple-ref.ms" "The variable value is .\n" (hash)))
