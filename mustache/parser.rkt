@@ -49,7 +49,7 @@
 (define default-tag-close "}}")
 
 (define (make-tag-regexp s e)
-  (regexp-append "^" (regexp-quote s) " *([#/&^>]?) *([a-zA-Z0-9.?_-]+) *" (regexp-quote e) "\n?"))
+  (regexp-append "^" (regexp-quote s) " *([#/&^>]?) *([a-zA-Z0-9.?_/-]+) *" (regexp-quote e) "\n?"))
 
 (define current-tag-regexp
   (make-parameter (make-tag-regexp default-tag-open default-tag-close)))
@@ -297,4 +297,5 @@
   (check-exn exn:fail:mustache:close-tag? (thunk (mustache-parse (open-input-string "{{/foo}}"))))
   
   ;; Recognizes partials
-  (check-equal? (^^ (mustache-parse (open-input-string "{{>foo.ms}}"))) (list "foo.ms")))
+  (check-equal? (^^ (mustache-parse (open-input-string "{{>foo.ms}}"))) (list "foo.ms"))
+  (check-equal? (^^ (mustache-parse (open-input-string "{{>dir/foo.ms}}"))) (list "dir/foo.ms")))
