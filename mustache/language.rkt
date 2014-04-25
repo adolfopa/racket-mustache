@@ -14,7 +14,7 @@
 ;;
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with this library; if not, write to the Free Software Foundation, Inc.,
-;; 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+;; 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 (require racket/dict
          racket/function
@@ -74,11 +74,11 @@
   (check-equal? (escape "") "")
   (check-equal? (escape "abc") "abc")
   (check-equal? (escape "<>&") "&lt;&gt;&amp;")
-  
+
   (check-equal? (escape #"") #"")
   (check-equal? (escape #"abc") #"abc")
   (check-equal? (escape #"<>&") #"&lt;&gt;&amp;")
-  
+
   (check-equal? (escape 'foo) 'foo))
 
 ;; display-escaped: Any -> Void
@@ -170,7 +170,7 @@
   (check-equal? (with-env (hash 'a '()) (sequence 'a 'b)) (void))
   (check-equal? (with-env (hash 'a "") (sequence 'a 'b)) 'b)
   (check-equal? (with-env (hash 'a #"") (sequence 'a 'b)) 'b)
-  
+
   (check-equal? (let ([out (open-output-string)])
                   (parameterize ([current-output-port out])
                     (with-env (hash 'a '(1 2 3))
@@ -220,14 +220,17 @@
   (check-equal? (with-env (hash 'a "") (inversion 'a 'b)) (void))
   (check-equal? (with-env (hash 'a #"") (inversion 'a 'b)) (void))
   (check-equal? (with-env (hash 'a '()) (inversion 'a 'b)) 'b))
-     
-(define (partial name)
-  (define render
-    (let ([ns (make-base-empty-namespace)])
-      (namespace-attach-module (current-namespace) 'racket/dict ns) ; gen:dict
-      (parameterize ([current-namespace ns])
-        (dynamic-require name 'render (thunk (error "couldn't load partial" name))))))
-  (render (current-env) (current-output-port)))
+
+(define partial
+  (let ([partials (make-hash)])
+    (lambda (name)
+      (unless (hash-has-key? partials name)
+              (hash-set! partials name
+                (let ([ns (make-base-empty-namespace)])
+                  (namespace-attach-module (current-namespace) 'racket/dict ns) ; gen:dict
+                  (parameterize ([current-namespace ns])
+                    (dynamic-require name 'render (thunk (error "couldn't load partial" name)))))))
+      ((hash-ref partials name) (current-env) (current-output-port)))))
 
 (module+ test
   (define (check-partial module-name expected [initial-dict (hash)])
