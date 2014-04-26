@@ -31,13 +31,25 @@
          (rename-out [module-begin #%module-begin]))
 
 (module+ test
+  (require racket/runtime-path)
   (require rackunit))
 
 (define-syntax-rule (module-begin stmt ...)
   (#%plain-module-begin
-   (provide render)
+   (require racket/runtime-path)
+   
+   (provide partial-load-path
+            render)
+   
+   (define-runtime-module-path-index template-module-path ".")
+
+   (define partial-load-path
+     (resolved-module-path-name
+      (module-path-index-resolve template-module-path)))
+   
    (define (render env out)
-     (parameterize ([current-output-port out])
+     (parameterize ([current-output-port out]
+                    [current-load-relative-directory partial-load-path])
        (with-env env stmt ...)))))
 
 ;; escape: (U String Bytes Any) = T-> T
@@ -233,12 +245,16 @@
       ((hash-ref partials name) (current-env) (current-output-port)))))
 
 (module+ test
+  (define-runtime-path module-path ".")
+  
   (define (check-partial module-name expected [initial-dict (hash)])
-    (parameterize ([current-output-port (open-output-string)])
+    (parameterize ([current-output-port (open-output-string)]
+                   [current-load-relative-directory module-path])
       (with-env initial-dict
         (partial module-name)
         (check-equal? (get-output-string (current-output-port))
                       expected))))
+  
   (check-partial "tests/only-text.ms" "I contain only text.\n")
   (check-partial "tests/simple-ref.ms" "The variable value is bar.\n" (hash "foo" "bar"))
   (check-partial "tests/simple-ref.ms" "The variable value is .\n" (hash)))
