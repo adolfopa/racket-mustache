@@ -12,6 +12,7 @@
          (prefix-in partial-in-section: "partial-in-section.ms"))
 
 (module+ test
+  (require racket/stream)
   (require rackunit))
 
 (module+ test
@@ -32,6 +33,8 @@
   
   (check-tpl section:render (hash "foo" #t) "Here are some X.\n")
   (check-tpl section:render (hash "foo" (list 1 2 3)) "Here are some XXX.\n")
+  (check-tpl section:render (hash "foo" (vector 1 2 3)) "Here are some XXX.\n")
+  (check-tpl section:render (hash "foo" (stream 1 2 3)) "Here are some XXX.\n")
   (check-tpl section:render (hash "foo" #f) "Here are some .\n")
   (check-tpl section:render (hash) "Here are some .\n")
   

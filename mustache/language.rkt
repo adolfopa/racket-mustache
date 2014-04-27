@@ -32,6 +32,7 @@
 
 (module+ test
   (require racket/runtime-path)
+  (require racket/stream)
   (require rackunit))
 
 (define-syntax-rule (module-begin stmt ...)
@@ -197,26 +198,46 @@
                 "xxx")
   (check-equal? (with-env (hash 'a 'b) (sequence 'a 'b)) 'b))
 
+;; sequence-empty?: (All (A) ((Sequence A) -> Boolean)
+(define (sequence-empty? seq)
+  (define-values (has-values? _) (sequence-generate seq))
+  (not (has-values?)))
+
+(module+ test
+  (check-true (sequence-empty? '()))
+  (check-true (sequence-empty? #()))
+  (check-true (sequence-empty? empty-stream)))
+
 ;; mustache-false?: Any -> Boolean
 ;; Test if `datum' is a falsy value.  A value is considered falsy
 ;; if it is #f or '().
 (define (mustache-false? datum)
   (or (not datum)
-      (null? datum)))
+      (and (mustache-seq? datum)
+           (sequence-empty? datum))))
 
 (module+ test
   (check-true (mustache-false? #f))
   (check-true (mustache-false? '()))
+  (check-true (mustache-false? #()))
+  (check-true (mustache-false? empty-stream))
   (check-false (mustache-false? ""))
-  (check-false (mustache-false? #"")))
+  (check-false (mustache-false? #""))
+  (check-false (mustache-false? (hash)))
+  (check-false (mustache-false? '((a . 1)))))
 
 ;; mustache-seq?: Any -> Boolean
-;; Test if `datum' is a mustache sequence (list or vector).
+;; Test if `datum' is a mustache sequence (any Racket sequence except dicts,
+;; strings and byte strings).
 (define (mustache-seq? datum)
-  (and (sequence? datum)
-       (not (hash? datum))
-       (not (string? datum))
-       (not (bytes? datum))))
+  ;; Both '() and vectors satisfy dict?, so we must rule them out before
+  ;; checking the general case.
+  (or (null? datum)
+      (vector? datum)
+      (and (sequence? datum)
+           (not (dict? datum))
+           (not (string? datum))
+           (not (bytes? datum)))))
 
 (module+ test
   (check-true (mustache-seq? '()))
