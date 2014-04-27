@@ -121,10 +121,16 @@
          (box (dict:ref frame key))))
      (if (box? value)
          (unbox value)
-         (failure)))
+         (if (procedure? failure) (failure) failure)))
    (define (dict-has-key? dict key)
      (for/or ([frame (environment-frames dict)])
        (dict:has-key? frame key)))])
+
+(module+ test
+  (check-equal? (dict-ref empty-environment 'a 'b) 'b)
+  (check-equal? (dict-ref empty-environment 'a (thunk 'b)) 'b)
+  (check-exn exn:fail:contract:arity?
+             (thunk (dict-ref empty-environment 'a (λ (x y z) 'b)))))
 
 (define empty-environment (environment '()))
 
