@@ -9,7 +9,8 @@
          (prefix-in inversion: "inversion.ms")
          (prefix-in delimiter: "delimiter.ms")
          (prefix-in partial: "partials.ms")
-         (prefix-in partial-in-section: "partial-in-section.ms"))
+         (prefix-in partial-in-section: "partial-in-section.ms")
+         (prefix-in dotted-names: "dotted-names.ms"))
 
 (module+ test
   (require racket/stream)
@@ -56,4 +57,9 @@
   (check-tpl partial-in-section:render (hash "sect" (hash)  "foo" "bar")
                                        "Partial: The variable value is bar.\n")
   (check-tpl partial-in-section:render (hash "sect" (hash "foo" "bar"))
-                                       "Partial: The variable value is bar.\n"))
+                                       "Partial: The variable value is bar.\n")
+
+  (check-tpl dotted-names:render (hash "a" (hash "b" (hash "c" "yes")) "b" (hash "c" "ERROR"))
+                                 "Dotted: yes.\n")
+  (check-tpl dotted-names:render (hash "a" (hash "b" '()) "b" (hash "c" "ERROR"))
+                                 "Dotted: .\n"))

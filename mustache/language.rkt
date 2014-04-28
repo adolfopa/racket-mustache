@@ -18,7 +18,9 @@
 
 (require racket/dict
          racket/function
-         racket/list)
+         racket/list
+         racket/string
+         (only-in srfi/13 string-contains))
 
 (provide display-escaped
          display-raw
@@ -118,14 +120,14 @@
                                (λ () (error "no value found for key" key))])
      (define value
        (for/first ([frame (environment-frames dict)]
-                   #:when (dict:has-key? frame key))
+                   #:when (and (dict? frame) (dict:has-key? frame key)))
          (box (dict:ref frame key))))
      (if (box? value)
          (unbox value)
          (if (procedure? failure) (failure) failure)))
    (define (dict-has-key? dict key)
      (for/or ([frame (environment-frames dict)])
-       (dict:has-key? frame key)))])
+       (and (dict? frame) (dict:has-key? frame key))))])
 
 (module+ test
   (check-equal? (dict-ref empty-environment 'a 'b) 'b)
@@ -146,19 +148,31 @@
 ;; Return the value bound to `name' in the current environment. If no value
 ;; is bound, return the value of `default' (by default, the empty string).
 (define (env-ref name [default ""])
-  (dict-ref (current-env) name (λ () default)))
+  (if (and (string? name) (string-contains name "."))
+      (let ([trimmed (string-trim name)])
+        (if (eq? "." trimmed)
+          (car (environment-frames (current-env)))
+          (for/fold ([env (current-env)])
+                    ([n (string-split trimmed #px"\\s*\\.\\s*")])
+            (if (and env (dict? env) (dict:has-key? env n))
+                (dict:ref env n)
+                default))))
+      (dict-ref (current-env) name (λ () default))))
 
 (module+ test
   (check-equal? (env-ref 'x) "")
-  (check-equal? (with-env (hash 'x 'y) (env-ref 'x)) 'y))
+  (check-equal? (with-env (hash 'x 'y) (env-ref 'x)) 'y)
+  (check-equal? (with-env (hash "x" (hash "y" (hash "z" "!"))) (env-ref "x.y.z")) "!")
+  (check-equal? (with-env (hash "x" (hash "y" (hash "z" "!"))) (env-ref " x . y . z ")) "!")
+  (check-equal? (with-env "!" (env-ref ".")) "!")
+  (check-equal? (with-env (hash "x" "_" "y" "_") (env-ref "x.y")) "")
+  (check-equal? (with-env (hash "x" "_" "y" "_") (env-ref "x.y")) ""))
 
 ;; Extend the current environment with the given object.
 ;; If the object is not a dict, no environment extension will be done.
 (define-syntax-rule (with-env obj stmt ...)
-  (if (dict? obj)
-      (parameterize ([current-env (environment-extend (current-env) obj)])
-        stmt ...)
-      (begin stmt ...)))
+  (parameterize ([current-env (environment-extend (current-env) obj)])
+    stmt ...))
 
 (module+ test
   (check-equal? (with-env 'a (env-ref 'a)) "")
