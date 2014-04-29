@@ -150,13 +150,13 @@
 (define (env-ref name [default ""])
   (if (and (string? name) (string-contains name "."))
       (let ([trimmed (string-trim name)])
-        (if (eq? "." trimmed)
-          (car (environment-frames (current-env)))
-          (for/fold ([env (current-env)])
-                    ([n (string-split trimmed #px"\\s*\\.\\s*")])
-            (if (and env (dict? env) (dict:has-key? env n))
-                (dict:ref env n)
-                default))))
+        (if (string=? "." trimmed)
+            (car (environment-frames (current-env)))
+            (for/fold ([env (current-env)]) ([n (string-split trimmed #px"\\s*\\.\\s*")]
+                                             #:final (not (dict? env)))
+              (if (and (dict? env) (dict-has-key? env n))
+                  (dict-ref env n)
+                  default))))
       (dict-ref (current-env) name (λ () default))))
 
 (module+ test
@@ -169,7 +169,6 @@
   (check-equal? (with-env (hash "x" "_" "y" "_") (env-ref "x.y")) ""))
 
 ;; Extend the current environment with the given object.
-;; If the object is not a dict, no environment extension will be done.
 (define-syntax-rule (with-env obj stmt ...)
   (parameterize ([current-env (environment-extend (current-env) obj)])
     stmt ...))
