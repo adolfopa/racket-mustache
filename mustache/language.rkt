@@ -19,18 +19,20 @@
 (require racket/dict
          racket/function
          racket/list
-         racket/string
-         (only-in srfi/13 string-contains))
+         (only-in srfi/13 string-contains)
+         racket/string )
 
 (provide display-escaped
          display-raw
          display-txt
-         sequence
          inversion
          partial
-         #%datum
+         sequence
+         with-env
          #%app
-         (rename-out [module-begin #%module-begin]))
+         #%datum
+         (rename-out [module-begin #%module-begin])
+         #%top)
 
 (module+ test
   (require racket/runtime-path)

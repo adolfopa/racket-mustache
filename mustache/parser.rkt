@@ -14,7 +14,7 @@
 ;;
 ;; You should have received a copy of the GNU Lesser General Public License
 ;; along with this library; if not, write to the Free Software Foundation, Inc.,
-;; 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+;; 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 (require racket/format
          racket/function
@@ -153,7 +153,7 @@
 
 (define (normalize lst acc [name #f])
   (match lst
-    [(list) 
+    [(list)
      (if name
          (raise (exn:fail:mustache:close-tag
                  (~a "Expected close tag" tag-name "; reached EOF")
@@ -166,7 +166,7 @@
      (define kons (if (section? (first lst)) section inversion))
      (normalize (or succ '()) (cons (kons n pos body) acc) name)]
     [(list (close-tag n pos) more ...)
-     (if (equal? n name) 
+     (if (equal? n name)
          (values (reverse acc) more)
          (raise (exn:fail:mustache:close-tag
                  (~a "Unexpected end tag" tag-name "at position" pos)
@@ -197,7 +197,7 @@
   (when skip-until-nl (skip-until-first-nl in))
   (if (eof-object? (peek-char in))
       eof
-      (with-syntax ([body 
+      (with-syntax ([body
                      (let loop ([tokens (mustache-parse in)])
                        (cond [(null? tokens)
                               #'()]
