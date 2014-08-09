@@ -32,7 +32,8 @@
 
 (define (emit-module-body yml)
   (for/fold ([body #'()]) ([test (dict-ref yml "tests")])
-    (define module-name (template-name (dict-ref test "name")))
+    (define test-name (dict-ref test "name"))
+    (define module-name (template-name test-name))
     (with-syntax ([template-submodule
                    (emit-template-submodule module-name
                                             (dict-ref test "template"))]
@@ -40,6 +41,7 @@
                    (emit-test-submodule module-name
                                         (dict-ref test "expected")
                                         (dict-ref test "data")
+                                        test-name
                                         (dict-ref test "desc"))]
                   [(forms ...) body])
       #'(forms ...
@@ -63,10 +65,11 @@
     #'(module name (submod mustache/spec/parser compound-lang)
         module-body)))
 
-(define (emit-test-submodule template-name expected data desc)
+(define (emit-test-submodule template-name expected data test-name desc)
   (with-syntax* ([template-name template-name]
                  [expected (datum->syntax #f expected)]
                  [data (datum->syntax #f data)]
+                 [test-name (datum->syntax #f test-name)]
                  [desc (datum->syntax #f desc)]
                  [ns: (generate-temporary)]
                  [ns:render (format-id #'ns: "~a~a" #'ns: 'render)]
@@ -75,10 +78,10 @@
         (require (rename-in (submod ".." template-name)
                             [render ns:render]
                             [partial-load-path ns:partial-load-path]))
-        (check-equal? expected
-                      (call-with-output-string
+        (check-equal? (call-with-output-string
                        (λ (out) (ns:render data out)))
-                      desc))))
+                      expected
+                      (~a test-name ": " desc)))))
 
 (define (template-name test-name)
   (string->symbol (string-downcase (string-replace test-name #px"\\s+" "-"))))
