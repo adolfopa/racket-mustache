@@ -49,7 +49,7 @@
 (define default-tag-close "}}")
 
 (define (make-tag-regexp s e)
-  (regexp-append "^" (regexp-quote s) " *([#/&^>]?) *([a-zA-Z0-9.?_/-]+) *" (regexp-quote e) "\n?"))
+  (regexp-append "^" (regexp-quote s) " *([#/&^>]?) *([a-zA-Z0-9.?_/-]+) *" (regexp-quote e)))
 
 (define current-tag-regexp
   (make-parameter (make-tag-regexp default-tag-open default-tag-close)))
