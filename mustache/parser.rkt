@@ -78,7 +78,7 @@
 (define read-simple-tag (make-lexer current-tag-regexp))
 (define read-comment-tag (make-lexer current-comment-regexp))
 (define read-delims-tag (make-lexer current-delims-regexp))
-(define read-escape-tag (make-lexer (thunk #rx"^{{{ *([a-zA-Z0-9?]+) *}}}")))
+(define read-escape-tag (make-lexer (thunk #rx"^{{{ *([a-zA-Z0-9.?_/-]+) *}}}")))
 (define read-raw-text (make-lexer current-text-regexp))
 
 (define (make-pos src in)
@@ -251,9 +251,20 @@
   ;; Recognizes simple references.
   (check-equal? (^^ (mustache-parse (open-input-string "{{foo}}")))
                 (list "foo"))
+  (check-equal? (^^ (mustache-parse (open-input-string "{{-/_?}}")))
+                (list "-/_?"))
+  ;; Recognizes dotted references
+  (check-equal? (^^ (mustache-parse (open-input-string "{{foo.bar.baz}}")))
+                (list "foo.bar.baz"))
   ;; Blanks inside an expression will be ignored.
   (check-equal? (^^ (mustache-parse (open-input-string "{{ foo }}")))
                 (list "foo"))
+  ;; Recognizes simple escaped references
+  (check-equal? (^^ (mustache-parse (open-input-string "{{{foo}}}")))
+                (list "foo"))
+  ;; Recognizes dotted escaped references
+  (check-equal? (^^ (mustache-parse (open-input-string "{{{foo.bar.baz}}}")))
+                (list "foo.bar.baz"))
   ;; Blanks around expressions are not needed.
   (check-equal? (^^ (mustache-parse (open-input-string "123{{foo}}456")))
                 (list #"123" "foo" #"456"))
