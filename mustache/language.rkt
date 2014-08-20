@@ -64,7 +64,8 @@
 (define escape
   (let ([amp (reverse '(#\& #\a #\m #\p #\;))]
         [lt (reverse '(#\& #\l #\t #\;))]
-        [gt (reverse '(#\& #\g #\t #\;))])
+        [gt (reverse '(#\& #\g #\t #\;))]
+        [quot (reverse '(#\& #\q #\u #\o #\t #\;))])
     (λ (bs)
       (cond [(or (string? bs) (bytes? bs))
              (define-values  (->list ->string)
@@ -81,6 +82,7 @@
                                      [(#\&) amp]
                                      [(#\<) lt]
                                      [(#\>) gt]
+                                     [(#\") quot]
                                      [else
                                       (list c)])
                                    acc)))))]
@@ -90,11 +92,11 @@
 (module+ test
   (check-equal? (escape "") "")
   (check-equal? (escape "abc") "abc")
-  (check-equal? (escape "<>&") "&lt;&gt;&amp;")
+  (check-equal? (escape "<>&\"") "&lt;&gt;&amp;&quot;")
 
   (check-equal? (escape #"") #"")
   (check-equal? (escape #"abc") #"abc")
-  (check-equal? (escape #"<>&") #"&lt;&gt;&amp;")
+  (check-equal? (escape #"<>&\"") #"&lt;&gt;&amp;&quot;")
 
   (check-equal? (escape 'foo) 'foo))
 
