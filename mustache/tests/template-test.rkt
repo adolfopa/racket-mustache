@@ -17,7 +17,7 @@
   (require rackunit))
 
 (module+ test
-  (define (check-tpl f env expected)
+  (define-simple-check (check-tpl f env expected)
     (let ([out (open-output-string)])
       (f env out)
       (check-equal? (get-output-string out) expected)))
