@@ -1,0 +1,7 @@
+before_install:
+  - sudo add-apt-repository ppa:plt/racket
+  - sudo apt-get update
+  - sudo apt-get install racket
+
+script:
+  - make clean test
