@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/adolfopa/racket-mustache.svg)](https://travis-ci.org/adolfopa/racket-mustache)
+
 # Mustache for Racket
 
 A Racket implementation of [Mustache](http://mustache.github.io).
