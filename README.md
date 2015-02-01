@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/adolfopa/racket-mustache.svg)](https://travis-ci.org/adolfopa/racket-mustache)
+[![License](https://img.shields.io/badge/license-LGPL2-blue.svg)](http://opensource.org/licenses/LGPL-2.1)
 
 # Mustache for Racket
 
