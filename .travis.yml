@@ -1,6 +1,6 @@
 before_install:
-  - sudo add-apt-repository ppa:plt/racket
-  - sudo apt-get update
+  - sudo add-apt-repository ppa:plt/racket -y
+  - sudo apt-get update -q
   - sudo apt-get install racket
 
 script:
