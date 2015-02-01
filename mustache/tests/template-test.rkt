@@ -50,7 +50,7 @@
   
   (check-tpl delimiter:render (hash "foo" "bar") "The value is bar.\n")
 
-  (check-tpl partial:render (hash) "The content of the partial is I contain only text.\n")
+  (check-tpl partial:render (hash) "The content of the partial is I contain only text.\n\n")
 
   (check-tpl partial-in-section:render (hash) "Partial: ")
   (check-tpl partial-in-section:render (hash "sect" #t) "Partial: The variable value is .\n")
