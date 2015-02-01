@@ -52,7 +52,7 @@
 
   (check-tpl partial:render (hash) "The content of the partial is I contain only text.\n\n")
 
-  (check-tpl partial-in-section:render (hash) "Partial: ")
+  (check-tpl partial-in-section:render (hash) "Partial: \n")
   (check-tpl partial-in-section:render (hash "sect" #t) "Partial: The variable value is .\n")
   (check-tpl partial-in-section:render (hash "sect" (hash)  "foo" "bar")
                                        "Partial: The variable value is bar.\n")
