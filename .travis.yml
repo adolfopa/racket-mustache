@@ -1,8 +1,13 @@
 before_install:
   - sudo add-apt-repository ppa:plt/racket -y
   - sudo apt-get update -q
+
+install:
   - sudo apt-get install racket
   - sh ci/install-deps.sh
 
 script:
-  - make clean test coverage
+  - make clean test
+
+after_script:
+  - make coverage
