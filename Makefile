@@ -21,4 +21,4 @@ get-specs:
 	cat specs.txt | while read uri; do (echo '#lang mustache/spec\n' && curl $$uri) > $(SPECS_DIR)/$$(basename $$uri); done
 
 clean:
-	find . -type d -name 'compiled' | xargs rm -rf
+	find . -type d \( -name 'compiled' -or -name 'coverage' \) | xargs rm -rf
