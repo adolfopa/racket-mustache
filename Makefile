@@ -12,6 +12,9 @@ test: link-pkg
 test-specs:
 	find $(MODULE_NAME) -name '*.yml' | xargs raco test
 
+coverage:
+	raco cover -f coveralls -d $(TRAVIS_BUILD_DIR)/coverage mustache
+
 SPECS_DIR = mustache/tests
 
 get-specs:

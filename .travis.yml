@@ -2,6 +2,7 @@ before_install:
   - sudo add-apt-repository ppa:plt/racket -y
   - sudo apt-get update -q
   - sudo apt-get install racket
+  - raco pkg install --auto cover
 
 script:
-  - make clean test
+  - make clean test coverage
