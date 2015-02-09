@@ -1,3 +1,4 @@
 #!/bin/sh
 
-raco pkg install --auto cover yaml
+raco pkg install --link -t dir --auto mustache
+raco pkg install --auto cover
