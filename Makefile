@@ -4,7 +4,7 @@ compile:
 	find $(MODULE_NAME) -type f -name '*.rkt' | xargs raco make
 
 link-pkg:
-	raco pkg install --deps search-auto --link -t dir $(MODULE_NAME) || true
+	raco pkg install --link -t dir $(MODULE_NAME) || true
 
 test: link-pkg
 	find $(MODULE_NAME) -type f \( -name '*.rkt' -or -name '*.yml' \) | xargs raco test -x
